@@ -1,0 +1,30 @@
+; NEW COMMAND:
+; USADD (UNSIGNED SATURATION ADD)
+; USADD M : AC + M -> AC, PS, IF PS(C) == 1: FFFF -> AC
+
+ORG     0x00
+R:      WORD        ?           ; PROGRAM RESULT
+X:      WORD        0x0BB0      ; X VARIABLE
+Y:      WORD        0xB00B      ; Y VARIABLE
+HIGH:   WORD        0xFF00      ; HIGH BIT CONST
+
+START:  CLA
+        LD          X           ; AC = ABCD,            R = 0000
+        AND         HIGH        ; AC = AB00,            R = 0000
+        ST          R           ; AC = AB00,            R = AB00
+        LD          Y           ; AC = XYZW,            R = AB00
+        AND         HIGH        ; AC = XY00,            R = AB00
+        USADD       R           ; AC = (XY+AB)00,       R = AB00
+        SWAB                    ; AC = 00(XY+AB),       R = AB00
+        ST          R           ; AC = 00(XY+AB),       R = 00(XY+AB)
+        LD          X           ; AC = ABCD,            R = 00(XY+AB)
+        AND         #FF         ; AC = 00CD,            R = 00(XY+AB)
+        SWAB                    ; AC = CD00,            R = 00(XY+AB)
+        ADD         R           ; AC = CD(XY+AB),       R = 00(XY+AB)
+        ST          R           ; AC = CD(XY+AB),       R = CD(XY+AB)
+        LD          Y           ; AC = XYZW,            R = CD(XY+AB)
+        AND         #FF         ; AC = 00ZW,            R = CD(XY+AB)
+        SWAB                    ; AC = ZW00,            R = CD(XY+AB)
+        USADD       R           ; AC = (ZW+CD)(XY+AB),  R = CD(XY+AB)
+        ST          R           ; AC = (ZW+CD)(XY+AB),  R = (ZW+CD)(XY+AB)
+        HLT
